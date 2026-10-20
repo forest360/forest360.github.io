@@ -278,8 +278,11 @@ button.copy:hover { border-color: var(--accent); }
 .pm-ph-mark { position: absolute; left: 50%; bottom: 0.35rem; transform: translateX(-50%); width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-bottom: 10px solid #FFD54A; filter: drop-shadow(0 0 2px rgb(0 0 0 / 0.7)); }
 .pm-ph-cap { font-size: 0.82rem; color: var(--ink-2); line-height: 1.45; }
 .pm-read { border-top: 1px solid var(--rule); padding-top: 0.7rem; }
-.pm-rv { font-family: var(--f-display); font-size: 0.88rem; color: var(--ink); line-height: 1.55; }
-.pm-rv b { font-weight: 700; }
+/* fixed rows, one line each: the readout never changes height, so nothing below it moves */
+.pm-rhint { font-size: 0.84rem; margin: 0 0 0.45rem; }
+.pm-rv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.2rem 0.8rem; margin: 0; font-family: var(--f-display); font-size: 0.88rem; line-height: 1.45; }
+.pm-rv dt { font-weight: 700; color: var(--ink); white-space: nowrap; }
+.pm-rv dd { margin: 0; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
 @media (max-width: 680px) { .pm-frame { width: 100%; } .pm-side { max-width: none; } }
 
 /* ---------- floating section menu: follows the scroll, marks the section on screen ----------
@@ -606,7 +609,8 @@ html { scroll-behavior: smooth; }
             </figure>
             <div class="pm-leg" data-for="floor"><h4>Forest floor</h4><p>The forest floor seen from straight above, with the trees taken away: a render of the 3D model&#x27;s ground, low vegetation, rocks, stumps and fallen logs.</p></div><div class="pm-leg" data-for="height" hidden><h4>Bare-earth height</h4><p>The ground under the vegetation, 6.5 m of fall across the plot, shaded from the north-west.</p><div class="pm-ramp" style="background:linear-gradient(90deg,#F3E7CF,#D9B98A,#A8794A,#6B4321)"></div><div class="pm-ticks"><span>low</span><span>6.5 m higher</span></div></div><div class="pm-leg" data-for="relief" hidden><h4>Micro-relief</h4><p>The bare earth minus its 2 m surroundings: the hollows and hummocks a machine feels.</p><div class="pm-ramp" style="background:linear-gradient(90deg,#2a5fa8,#7fa6d6,#D6D6D2,#e3a35f,#b45a12)"></div><div class="pm-ticks"><span>hollow −12 cm</span><span>0</span><span>+12 cm hummock</span></div></div><div class="pm-leg" data-for="cover" hidden><h4>Ground cover</h4><p>What covers the ground in each 25 cm cell.</p><ul class="pm-keys"><li><i style="background:#e34948"></i>dwarf shrubs</li><li><i style="background:#008300"></i>moss and lichen</li><li><i style="background:#1baf7a"></i>grass, herbs, ferns, saplings</li><li><i style="background:#eda100"></i>leaf and needle litter, bare soil</li><li><i style="background:#6b4a2b"></i>dead wood</li><li><i style="background:#2a78d6"></i>rock</li></ul></div><div class="pm-leg" data-for="canopy" hidden><h4>Canopy height</h4><p>The height of the trees above the bare earth, read from the same 3D model.</p><div class="pm-ramp" style="background:linear-gradient(90deg,#E3F0D6,#9CCB86,#4E9A5C,#1E6040,#0E3B27)"></div><div class="pm-ticks"><span>2 m</span><span>21 m</span></div></div>
             <div class="pm-leg pm-tleg"><h4>Trees</h4><ul class="pm-keys pm-trees-key"><li><i class="k-pine"></i>pine 31</li><li><i class="k-spruce"></i>spruce 24</li><li><i class="k-birch"></i>birch 23</li><li><i class="k-broad"></i>aspen, other broadleaf 5</li><li><i class="k-unk"></i>not named 8</li></ul><p>Size follows the trunk diameter. Click a tree for its photo.</p></div>
-            <div class="pm-read" aria-live="polite"><h4>At the pointer</h4><p class="pm-rv">Move over the map, or tap it.</p></div>
+            <div class="pm-read"><h4>At the pointer</h4><p class="pm-rhint">Move over the map, or tap it. Heights are above the plot's lowest ground.</p>
+              <dl class="pm-rv"><dt>Ground height</dt><dd data-k="h">–</dd><dt>Micro-relief</dt><dd data-k="rl">–</dd><dt>Ground cover</dt><dd data-k="cv">–</dd><dt>Canopy</dt><dd data-k="ch">–</dd></dl></div>
           </div>
         </div>
       </div>
@@ -833,20 +837,19 @@ document.querySelectorAll("[data-compare]").forEach(box => {
   const dec = (s, T) => { const b = atob(s), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return new T(u.buffer); };
   const grid = () => loading || (loading = fetch("media/map/grid.json").then(r => r.json()).then(j => {
     G = { ...j, h: dec(j.h, Int16Array), rl: dec(j.rl, Int8Array), cv: dec(j.cv, Uint8Array), ch: dec(j.ch, Uint8Array) };
-  }).catch(() => { rv.textContent = "Values could not be loaded here."; }));
-  const say = (el, parts) => { el.replaceChildren(); parts.forEach(([b, t], i) => { if (i) el.append(document.createElement("br")); const s = document.createElement("b"); s.textContent = b; el.append(s, " " + t); }); };
+  }).catch(() => { root.querySelector(".pm-rhint").textContent = "Values could not be loaded here."; }));
+  const dd = Object.fromEntries([...rv.querySelectorAll("dd")].map(e => [e.dataset.k, e]));
+  const put = (h, rl, cv, ch) => { dd.h.textContent = h; dd.rl.textContent = rl; dd.cv.textContent = cv; dd.ch.textContent = ch; };
   const read = (mx, my) => {
     if (!G) return;
     const c = Math.floor(mx / G.cell), r = Math.floor(my / G.cell);
     if (c < 0 || r < 0 || c >= G.nx || r >= G.ny) return;
-    const k = r * G.nx + c, h = G.h[k];
-    if (h === -32768 && G.cv[k] === 255) { rv.textContent = "Not seen by the walk."; return; }
-    const parts = [];
-    if (h !== -32768) parts.push(["Ground", (h / 100).toFixed(2) + " m above the plot's lowest point"]);
-    if (G.rl[k] !== -128) { const v = G.rl[k]; parts.push(["Micro-relief", (v > 0 ? "+" : "") + v + " cm" + (v >= 3 ? " (hummock)" : v <= -3 ? " (hollow)" : "")]); }
-    parts.push(["Ground cover", G.cv[k] === 255 ? "not classified" : G.groups[G.cv[k]]]);
-    parts.push(["Canopy", G.ch[k] === 255 ? "open" : (G.ch[k] / 10).toFixed(1) + " m"]);
-    say(rv, parts);
+    const k = r * G.nx + c, h = G.h[k], v = G.rl[k];
+    if (h === -32768 && G.cv[k] === 255) { put("–", "–", "not seen by the walk", "–"); return; }
+    put(h === -32768 ? "–" : (h / 100).toFixed(2) + " m",
+        v === -128 ? "–" : (v > 0 ? "+" : "") + v + " cm" + (v >= 3 ? " (hummock)" : v <= -3 ? " (hollow)" : ""),
+        G.cv[k] === 255 ? "not classified" : G.groups[G.cv[k]],
+        G.ch[k] === 255 ? "open" : (G.ch[k] / 10).toFixed(1) + " m");
   };
   const toMap = ev => { const b = frame.getBoundingClientRect(); return [(ev.clientX - b.left) / b.width * vb.width, (ev.clientY - b.top) / b.height * vb.height, ev.clientX - b.left, ev.clientY - b.top]; };
   const card = root.querySelector(".pm-photo"), cimg = card.querySelector("img");
