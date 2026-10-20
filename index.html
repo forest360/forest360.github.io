@@ -586,6 +586,7 @@ html { scroll-behavior: smooth; }
             <label class="chk"><input type="checkbox" id="pm-trees" checked> Trees by species</label>
             <label class="chk"><input type="checkbox" id="pm-cont" checked> Contours 0.5 m</label>
             <label class="chk"><input type="checkbox" id="pm-walk"> Camera walk</label>
+            <label class="chk"><input type="checkbox" id="pm-photos" checked> Tree photo on click</label>
           </div>
         </div>
         <div class="pm-body">
@@ -853,11 +854,12 @@ document.querySelectorAll("[data-compare]").forEach(box => {
   };
   const toMap = ev => { const b = frame.getBoundingClientRect(); return [(ev.clientX - b.left) / b.width * vb.width, (ev.clientY - b.top) / b.height * vb.height, ev.clientX - b.left, ev.clientY - b.top]; };
   const card = root.querySelector(".pm-photo"), cimg = card.querySelector("img");
+  const photoBox = document.getElementById("pm-photos");
   let selT = null;
   const select = t => {
     if (selT) selT.classList.remove("sel");
     selT = t;
-    if (!t || !t.dataset.photo) { card.hidden = true; return; }
+    if (!t || !t.dataset.photo || !photoBox.checked) { card.hidden = true; if (t && photoBox.checked) t.classList.add("sel"); return; }
     t.classList.add("sel");
     card.querySelector(".pm-ph-name").textContent = t.dataset.name.charAt(0).toUpperCase() + t.dataset.name.slice(1);
     card.querySelector(".pm-ph-info").textContent = t.dataset.info.split(" · ").slice(1).join(" · ");
@@ -868,6 +870,7 @@ document.querySelectorAll("[data-compare]").forEach(box => {
     if (innerWidth <= 920) card.scrollIntoView({ block: "nearest", behavior: "smooth" });
   };
   card.querySelector(".pm-ph-close").addEventListener("click", () => select(null));
+  photoBox.addEventListener("change", () => { if (photoBox.checked && selT) select(selT); else card.hidden = true; });
   svg.addEventListener("click", ev => { const t = ev.target.closest(".tr"); if (t) select(t); });
   let hot = null;
   const onMove = ev => {
