@@ -270,8 +270,9 @@ button.copy:hover { border-color: var(--accent); }
 .pm-photo { margin: 0; display: grid; gap: 0.35rem; }
 .pm-ph-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
 .pm-ph-head h4 { margin: 0; }
-.pm-ph-close { font: inherit; font-size: 1.2rem; line-height: 1; width: 1.9rem; height: 1.9rem; border: 1px solid var(--rule); border-radius: 50%; background: var(--paper); color: var(--ink-2); cursor: pointer; }
-.pm-ph-close:hover { border-color: var(--accent); color: var(--accent); }
+.pm-ph-tog { font-family: var(--f-display); font-size: 0.76rem; font-weight: 600; padding: 0.2rem 0.6rem; border: 1px solid var(--rule); border-radius: 999px; background: var(--paper); color: var(--ink-2); cursor: pointer; white-space: nowrap; }
+.pm-ph-tog:hover { border-color: var(--accent); color: var(--accent); }
+.pm-photo.collapsed .pm-ph-frame, .pm-photo.collapsed .pm-ph-cap { display: none; }
 .pm-ph-info { font-family: var(--f-display); font-size: 0.86rem; color: var(--ink); margin: 0; }
 .pm-ph-frame { position: relative; background: var(--screen); border-radius: 3px; overflow: hidden; aspect-ratio: 420 / 672; max-height: 62vh; }
 .pm-ph-frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
@@ -586,7 +587,6 @@ html { scroll-behavior: smooth; }
             <label class="chk"><input type="checkbox" id="pm-trees" checked> Trees by species</label>
             <label class="chk"><input type="checkbox" id="pm-cont" checked> Contours 0.5 m</label>
             <label class="chk"><input type="checkbox" id="pm-walk"> Camera walk</label>
-            <label class="chk"><input type="checkbox" id="pm-photos" checked> Tree photo on click</label>
           </div>
         </div>
         <div class="pm-body">
@@ -603,7 +603,7 @@ html { scroll-behavior: smooth; }
           </div>
           <div class="pm-side">
             <figure class="pm-photo" hidden>
-              <div class="pm-ph-head"><h4 class="pm-ph-name"></h4><button type="button" class="pm-ph-close" aria-label="Close the tree photo">×</button></div>
+              <div class="pm-ph-head"><h4 class="pm-ph-name"></h4><button type="button" class="pm-ph-tog" aria-expanded="true">Hide photo</button></div>
               <p class="pm-ph-info"></p>
               <div class="pm-ph-frame"><img alt="" width="420" height="672"><span class="pm-ph-mark" aria-hidden="true"></span></div>
               <figcaption class="pm-ph-cap"></figcaption>
@@ -854,12 +854,14 @@ document.querySelectorAll("[data-compare]").forEach(box => {
   };
   const toMap = ev => { const b = frame.getBoundingClientRect(); return [(ev.clientX - b.left) / b.width * vb.width, (ev.clientY - b.top) / b.height * vb.height, ev.clientX - b.left, ev.clientY - b.top]; };
   const card = root.querySelector(".pm-photo"), cimg = card.querySelector("img");
-  const photoBox = document.getElementById("pm-photos");
+  const tog = card.querySelector(".pm-ph-tog");
   let selT = null;
+  const setOpen = o => { card.classList.toggle("collapsed", !o); tog.textContent = o ? "Hide photo" : "Show photo"; tog.setAttribute("aria-expanded", String(o)); };
+  tog.addEventListener("click", () => setOpen(card.classList.contains("collapsed")));
   const select = t => {
     if (selT) selT.classList.remove("sel");
     selT = t;
-    if (!t || !t.dataset.photo || !photoBox.checked) { card.hidden = true; if (t && photoBox.checked) t.classList.add("sel"); return; }
+    if (!t || !t.dataset.photo) { card.hidden = true; return; }
     t.classList.add("sel");
     card.querySelector(".pm-ph-name").textContent = t.dataset.name.charAt(0).toUpperCase() + t.dataset.name.slice(1);
     card.querySelector(".pm-ph-info").textContent = t.dataset.info.split(" · ").slice(1).join(" · ");
@@ -869,8 +871,7 @@ document.querySelectorAll("[data-compare]").forEach(box => {
     card.hidden = false;
     if (innerWidth <= 920) card.scrollIntoView({ block: "nearest", behavior: "smooth" });
   };
-  card.querySelector(".pm-ph-close").addEventListener("click", () => select(null));
-  photoBox.addEventListener("change", () => { if (photoBox.checked && selT) select(selT); else card.hidden = true; });
+
   svg.addEventListener("click", ev => { const t = ev.target.closest(".tr"); if (t) select(t); });
   let hot = null;
   const onMove = ev => {
