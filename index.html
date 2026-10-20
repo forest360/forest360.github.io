@@ -602,8 +602,8 @@ html { scroll-behavior: smooth; }
             <div class="pm-tip" hidden></div>
           </div>
           <div class="pm-side">
-            <figure class="pm-photo" hidden>
-              <div class="pm-ph-head"><h4 class="pm-ph-name"></h4><button type="button" class="pm-ph-tog" aria-expanded="true">Hide photo</button></div>
+            <figure class="pm-photo collapsed" hidden>
+              <div class="pm-ph-head"><h4 class="pm-ph-name"></h4><button type="button" class="pm-ph-tog" aria-expanded="false">Show photo</button></div>
               <p class="pm-ph-info"></p>
               <div class="pm-ph-frame"><img alt="" width="420" height="672"><span class="pm-ph-mark" aria-hidden="true"></span></div>
               <figcaption class="pm-ph-cap"></figcaption>
@@ -856,7 +856,11 @@ document.querySelectorAll("[data-compare]").forEach(box => {
   const card = root.querySelector(".pm-photo"), cimg = card.querySelector("img");
   const tog = card.querySelector(".pm-ph-tog");
   let selT = null;
-  const setOpen = o => { card.classList.toggle("collapsed", !o); tog.textContent = o ? "Hide photo" : "Show photo"; tog.setAttribute("aria-expanded", String(o)); };
+  // the photo starts hidden (dara 2026-10-20); it loads only once it is shown
+  const setOpen = o => {
+    card.classList.toggle("collapsed", !o); tog.textContent = o ? "Hide photo" : "Show photo"; tog.setAttribute("aria-expanded", String(o));
+    if (o && cimg.dataset.src && cimg.getAttribute("src") !== cimg.dataset.src) cimg.src = cimg.dataset.src;
+  };
   tog.addEventListener("click", () => setOpen(card.classList.contains("collapsed")));
   const select = t => {
     if (selT) selT.classList.remove("sel");
@@ -865,7 +869,8 @@ document.querySelectorAll("[data-compare]").forEach(box => {
     t.classList.add("sel");
     card.querySelector(".pm-ph-name").textContent = t.dataset.name.charAt(0).toUpperCase() + t.dataset.name.slice(1);
     card.querySelector(".pm-ph-info").textContent = t.dataset.info.split(" · ").slice(1).join(" · ");
-    cimg.src = t.dataset.photo;
+    cimg.dataset.src = t.dataset.photo;
+    if (!card.classList.contains("collapsed")) cimg.src = t.dataset.photo;
     cimg.alt = "Photo of the selected " + t.dataset.name + " from the walk";
     card.querySelector(".pm-ph-cap").textContent = "A photo from the walk, taken " + t.dataset.dist + " m from the tree. The tree is the trunk above the yellow marker.";
     card.hidden = false;
