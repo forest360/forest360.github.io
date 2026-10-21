@@ -700,13 +700,28 @@ html { scroll-behavior: smooth; }
         <p>A drone that decides by itself where to fly next and maps the forest as it goes, in a very high-fidelity simulation: realistic forest, sensors and flight physics.</p>
       </div>
     </div>
-    <figure class="clip">
+    <figure class="clip" data-yt="sasa">
       <div class="frame ar-sasa"><video data-src="media/loops/sim_sasa.mp4" poster="media/img/sim_sasa.jpg" muted loop playsinline preload="none" aria-label="A drone flies itself through a snowy forest: its chase camera on the left, the map it builds and its planned path on the right"></video></div>
       <figcaption>
         <h3>A drone surveys a snowy forest by itself <span class="spd">×1.33</span></h3>
-        <p>The drone flies autonomously between the trunks of a snowy forest and does all of its computation onboard, using its LiDAR: it picks its next goal, plans the path and builds its map as it flies. Next, we will make it fly with cameras only. Left: a chase camera. Right: the map and the planned path. Work by <a href="https://sasakuruppuarachchi.github.io/" target="_blank" rel="noopener">Sasanka Arachchige ↗</a>, Tampere University.</p>
+        <p>The drone flies autonomously between the trunks of a snowy forest and does all of its computation onboard, using its LiDAR: it picks its next goal, plans the path and builds its map as it flies. Next, we will make it fly with cameras only. Left: a chase camera. Right: the map and the planned path. The full video on YouTube is at real speed: all of this runs onboard the drone, in real time. Work by <a href="https://sasakuruppuarachchi.github.io/" target="_blank" rel="noopener">Sasanka Arachchige ↗</a>, Tampere University.</p>
+        <a class="yt" target="_blank" rel="noopener" hidden>Full video on YouTube, real speed ↗</a>
       </figcaption>
     </figure>
+
+    <div class="sub">
+      <h3>Scanning a hectare with one drone or a swarm</h3>
+      <div class="prose">
+        <p>The same kind of drone can scan a stand on its own. It flies a square grid of straight lines 6 m apart, so every trunk is seen from overlapping sides and appears in the map once: 3.3 km of flight per hectare. Lines 4 m apart (5 km per hectare) also record the forest floor in fine detail.</p>
+        <p>A swarm splits the hectare into blocks, one per drone. All the photos go into one reconstruction, so the drones do not even need to fly at the same time. When they do, the whole hectare is captured under the same sun and sky. Drones that measure the distance and direction to each other can replace the crossing lines: in simulation, two drones on neighbouring lines keep their passes within about 6 cm of each other.</p>
+      </div>
+      <dl class="facts">
+        <div><dt>On foot · 1.0 m/s</dt><dd>55 min/ha <small>85 min with floor detail</small></dd></div>
+        <div><dt>One drone · 1.8 m/s</dt><dd>31 min/ha <small>46 min with floor detail</small></dd></div>
+        <div><dt>Four drones</dt><dd>~8 min/ha <small>~12 min with floor detail</small></dd></div>
+      </dl>
+      <p class="note">Flight time only, from the length of the grid and 1.8 m/s, the fastest speed we have measured to scan well in this simulation. A hectare with floor detail is about 46 minutes of flying: two to three batteries for one drone. Turning the photos into the map still takes hours. Not yet flown with a real camera drone.</p>
+    </div>
   </section>
 
   <nav class="sidenav" id="sidenav" aria-label="On this page">
@@ -742,7 +757,7 @@ html { scroll-behavior: smooth; }
 /* YouTube ids for the full-length videos. Fill these in after upload; empty = the link stays hidden. */
 const YT = {
   flythrough: "", layer_trunks: "", layer_bare_earth: "", layer_ground: "", layer_lidar: "",
-  detail: "", stream_room: "", stream_hv24: "", survey: "", crash: "", deadtree: "felw2DMTtu8"
+  detail: "", stream_room: "", stream_hv24: "", survey: "", crash: "", deadtree: "felw2DMTtu8", sasa: "ZqG_x3XrrZ4"
 };
 
 /* Hosts where a YouTube iframe may be embedded (static hosting). Elsewhere the link opens YouTube. */
